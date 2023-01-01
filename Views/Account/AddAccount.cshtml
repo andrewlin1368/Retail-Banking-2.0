@@ -1,0 +1,56 @@
+﻿@using Retail_Banking.ViewModels
+@model CustomerAccountDetail
+@{
+    ViewData["Title"] = "AddAccount";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if(TempData["Response"]!=null){
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="AddAccounts" method="post">
+            <input type="hidden" asp-for="@Model.customer.CustomerID" value="@Model.customer.CustomerID" />
+            <input type="hidden" asp-for="@Model.customer.SSNID" value="@Model.customer.SSNID" />
+            <input type="hidden" asp-for="@Model.customer.Age" value="@Model.customer.Age" />
+            <input type="hidden" asp-for="@Model.customer.Name" value="@Model.customer.Name" />
+            <input type="hidden" asp-for="@Model.customer.Address" value="@Model.customer.Address" />
+            <input type="hidden" asp-for="@Model.customer.Email" value="@Model.customer.Email" />
+            <h4>Add an account.</h4>
+            <hr />
+            <div class="form-group">
+                <label asp-for="@Model.customer.CustomerID"></label>
+                <input type="number" asp-for="@Model.account.CustomerID" class="form-control" value="@Model.customer.CustomerID" readonly/>
+                <span asp-validation-for="@Model.account.CustomerID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.account.AccountType"></label>
+                <select asp-for="@Model.account.AccountType" class="form-control">
+                    <option value="Checking">Checking</option>
+                    <option value="Saving">Saving</option>
+                </select>
+                <span asp-validation-for="@Model.account.AccountType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.account.AccountBalance"></label>
+                <input type="number" asp-for="@Model.account.AccountBalance" class="form-control" />
+                <span asp-validation-for="@Model.account.AccountBalance" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Account</button>
+            <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>
+

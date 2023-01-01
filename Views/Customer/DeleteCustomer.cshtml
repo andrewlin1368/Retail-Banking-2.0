@@ -1,0 +1,14 @@
+﻿
+@{
+    ViewData["Title"] = "DeleteCustomer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if(TempData["Response"] != null){
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Customer Deleted!</h4>
+        <p>@TempData["Response"]</p>
+        <hr>
+        <p class="mb-0">To go back home @Html.ActionLink("Click me!","Index","Home")</p>
+    </div>
+}

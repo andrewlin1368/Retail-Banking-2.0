@@ -1,0 +1,50 @@
+﻿@using Retail_Banking.ViewModels
+@model Withdraw
+@{
+    ViewData["Title"] = "Withdraw";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="WithdrawAccount">
+            <h4>Withdraw from Account ID: @Model.Account.AccountID.</h4>
+            <hr />
+            @Html.HiddenFor(x=>x.Account.AccountID)
+            <div class="form-group">
+                <label asp-for="@Model.Account.CustomerID"></label>
+                <input type="number" asp-for="@Model.Account.CustomerID" class="form-control" value="@Model.Account.CustomerID" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Account.AccountBalance"></label>
+                <input type="number" asp-for="@Model.Account.AccountBalance" class="form-control" value="@Model.Account.AccountBalance" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Account.AccountType"></label>
+                <input type="text" asp-for="@Model.Account.AccountType" class="form-control" value="@Model.Account.AccountType" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Amount"></label>
+                <input type="number" asp-for="@Model.Amount" class="form-control" value="@Model.Amount" />
+                <span asp-validation-for="@Model.Amount" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Withdraw</button>
+            <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>

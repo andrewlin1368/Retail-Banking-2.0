@@ -1,0 +1,54 @@
+﻿@model Customer
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@if(TempData["Response"]!=null){
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Cannot Delete!</h4>
+        <p>@TempData["Response"]</p>
+        <hr>
+        <p class="mb-0">To go back home @Html.ActionLink("Click me!","Index","Home")</p>
+    </div>
+}
+else{
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <form asp-action="ConfirmDelete">
+                <h4>Delete Customer.</h4>
+                <hr />
+                <div class="form-group">
+                    <label asp-for="@Model.SSNID"></label>
+                    <input type="number" asp-for="@Model.SSNID" class="form-control" value="@Model.SSNID" readonly />
+                </div>
+                @Html.HiddenFor(x=>x.CustomerID)
+                <div class="form-group">
+                    <label asp-for="@Model.Name"></label>
+                    <input type="text" asp-for="@Model.Name" class="form-control" value="@Model.Name" readonly/>
+                </div>
+                <div class="form-group">
+                    <label asp-for="@Model.Age"></label>
+                    <input type="number" asp-for="@Model.Age" class="form-control" value="@Model.Age" readonly/>
+                </div>
+                <div class="form-group">
+                    <label asp-for="@Model.Address"></label>
+                    <input type="text" asp-for="@Model.Address" class="form-control" value="@Model.Address" readonly/>
+                </div>
+                <div class="form-group">
+                    <label asp-for="@Model.Email"></label>
+                    <input type="email" asp-for="@Model.Email" class="form-control" value="@Model.Email" readonly />
+                </div>
+                @*<button type="submit" class="btn btn-danger">Delete</button>*@
+                <a onclick="showInPopup('@Url.Action("ConfirmDelete", "Customer", Model, Context.Request.Scheme)', 'Delete')" class="btn btn-danger" role="button">Delete</a>
+                <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+            </div>
+        </div>
+    </div>
+}

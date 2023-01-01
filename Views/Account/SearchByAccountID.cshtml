@@ -1,0 +1,36 @@
+﻿
+@{
+    ViewData["Title"] = "SearchByAccountID";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<h4>Search Account.</h4>
+<hr />
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="FetchCustomerAndAccountInfo">
+            <div class="form-group">
+                <label id="AccountID" name="AccountID">Account ID</label>
+                <input type="number" id="AccountID" name="AccountID" min="1" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>
+<hr />

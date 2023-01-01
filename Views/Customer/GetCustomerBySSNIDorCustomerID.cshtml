@@ -1,0 +1,52 @@
+﻿@using Retail_Banking.ViewModel
+@model CustomerIDs
+@{
+    ViewData["Title"] = "GetCustomerBySSNIDorCustomerID";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if(TempData["Response"]!=null){
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<h4>Search Customers.</h4>
+<hr />
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="GetCustomer">
+            <div class="form-group">
+                <label asp-for="@Model.CustomerID"></label>
+                <input type="number" asp-for="@Model.CustomerID" class="form-control" />
+                <span asp-validation-for="@Model.CustomerID" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="@Model.SSNID" value="0" />
+
+            <button type="submit" class="btn btn-primary">Search</button>
+
+        </form>
+        <hr />
+        <form asp-action="GetCustomer">
+            <div class="form-group">
+                <label asp-for="@Model.SSNID"></label>
+                <input type="number" asp-for="@Model.SSNID" class="form-control" />
+                <span asp-validation-for="@Model.SSNID" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="@Model.CustomerID" value="0" />
+
+            <button type="submit" class="btn btn-primary">Search</button>
+
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>
+<hr />
+

@@ -1,0 +1,44 @@
+﻿@model Account
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="DeleteAccount">
+            <h4>Delete Account for Account ID: @Model.AccountID.</h4>
+            <hr />
+            @Html.HiddenFor(x=>x.AccountID)
+            <div class="form-group">
+                <label asp-for="@Model.CustomerID"></label>
+                <input type="number" asp-for="@Model.CustomerID" class="form-control" value="@Model.CustomerID" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.AccountBalance"></label>
+                <input type="number" asp-for="@Model.AccountBalance" class="form-control" value="@Model.AccountBalance" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.AccountType"></label>
+                <input type="text" asp-for="@Model.AccountType" class="form-control" value="@Model.AccountType" readonly />
+            </div>
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>

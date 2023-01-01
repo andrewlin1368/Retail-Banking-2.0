@@ -1,0 +1,42 @@
+﻿@model Transactions
+@{
+    ViewData["Title"] = "Transfer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Uh oh!</strong> @TempData["Response"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="TransferMoney">
+            <h4>Transfer from Account ID: @Model.FromAccountID.</h4>
+            <hr />
+            @Html.HiddenFor(x=>x.FromAccountID)
+            <div class="form-group">
+                <label asp-for="@Model.ToAccountID"></label>
+                <input type="number" asp-for="@Model.ToAccountID" class="form-control" />
+                <span asp-validation-for="@Model.ToAccountID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Amount"></label>
+                <input type="number" asp-for="@Model.Amount" class="form-control" />
+                <span asp-validation-for="@Model.Amount" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Transfer</button>
+            <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>

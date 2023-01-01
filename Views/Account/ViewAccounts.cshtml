@@ -1,0 +1,76 @@
+﻿@using Retail_Banking.ViewModels
+@model CustomerAccount
+@{
+    ViewData["Title"] = "ViewAccounts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error!</h4>
+        <p>@TempData["Response"]</p>
+        <hr>
+        <p class="mb-0">To go back home @Html.ActionLink("Click me!","Index","Home")</p>
+    </div>
+}
+else
+{
+    @if (TempData["Response"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>@TempData["Response"]</strong> 
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    <section class="intro">
+        <div class="mask d-flex align-items-center h-100">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12">
+                        <div class="table-responsive bg-white" data-mdb-perfect-scrollbar="true" style="position: relative; height: 445px;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Customer ID</th>
+                                        <th scope="col">Account ID</th>
+                                        <th scope="col">Account Type</th>
+                                        <th scope="col">Account Balance</th>
+                                        <th scope="col">Latest Account Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (Account account in Model.accounts)
+                                    {
+                                        <tr>
+                                            <th scope="row" style="color: #666666;">@account.CustomerID</th>
+                                            <td>@account.AccountID</td>
+                                            <td>@account.AccountType</td>
+                                            <td>$@account.AccountBalance</td>
+                                            <td>@account.Status</td>
+                                            <td>@Html.ActionLink("Deposit","Deposit","Account",account)</td>
+                                            <td>@Html.ActionLink("Withdraw","Withdraw","Account",account)</td>
+                                            <td>@Html.ActionLink("Transfer","Transfer","Transactions",account)</td>
+                                            @*<td>@Html.ActionLink("Transactions","ViewAllTransactions","Transactions",account)</td>*@
+                                            <td><a onclick="showInPopup('@Url.Action("ViewAllTransactions", "Transactions", account)')" href="#" class="stretched">Transactions</a></td>
+                                            <td>@Html.ActionLink("Delete","Delete","Account",account)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+<hr />
+
+@Html.ActionLink("Add Account","AddAccount","Account",Model.customer,new {@class="btn btn-primary"})
+
+
+
+

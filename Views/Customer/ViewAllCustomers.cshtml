@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Customer>
+@{
+    ViewData["Title"] = "ViewAllCustomers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Response"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error!</h4>
+        <p>@TempData["Response"]</p>
+        <hr>
+        <p class="mb-0">To go back home @Html.ActionLink("Click me!","Index","Home")</p>
+    </div>
+}
+else
+{
+    <section class="intro">
+        <div class="mask d-flex align-items-center h-100">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12">
+                        <div class="table-responsive bg-white" data-mdb-perfect-scrollbar="true" style="position: relative; height: 445px;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Customer ID</th>
+                                        <th scope="col">SSN ID</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Age</th>
+                                        <th scope="col">Home Address</th>
+                                        <th scope="col">Email Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (Customer customer in Model)
+                                    {
+                                        <tr>
+                                            <th scope="row" style="color: #666666;">@customer.CustomerID</th>
+                                            <td>@customer.SSNID</td>
+                                            <td>@customer.Name</td>
+                                            <td>@customer.Age</td>
+                                            <td>@customer.Address</td>
+                                            <td>@customer.Email</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+

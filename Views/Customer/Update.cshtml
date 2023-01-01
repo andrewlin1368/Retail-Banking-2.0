@@ -1,0 +1,46 @@
+﻿@model Customer
+@{
+    ViewData["Title"] = "Update";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <form asp-action="UpdateCustomer" method="post">
+            <h4>Update Customer Info.</h4>
+            <hr />
+            <div class="form-group">
+                <label asp-for="@Model.SSNID"></label>
+                <input type="number" asp-for="@Model.SSNID" class="form-control" value="@Model.SSNID" readonly/>
+            </div>
+            @Html.HiddenFor(x=>x.CustomerID)
+            <div class="form-group">
+                <label asp-for="@Model.Name"></label>
+                <input type="text" asp-for="@Model.Name" class="form-control" value="@Model.Name"/>
+                <span asp-validation-for="@Model.Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Age"></label>
+                <input type="number" asp-for="@Model.Age" class="form-control" value="@Model.Age" />
+                <span asp-validation-for="@Model.Age" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Address"></label>
+                <input type="text" asp-for="@Model.Address" class="form-control" value="@Model.Address"/>
+                <span asp-validation-for="@Model.Address" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.Email"></label>
+                <input type="email" asp-for="@Model.Email" class="form-control" value="@Model.Email" readonly />
+            </div>
+            <button type="submit" class="btn btn-warning">Update</button>
+            <a href="javascript:history.back()" class="btn btn-primary" role="button">Cancel</a>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <img src="https://s42137.pcdn.co/wp-content/uploads/2022/10/majority-of-banking-institutions-building-their-own-technology-stack.jpeg.optimal.jpeg" class="img-fluid">
+        </div>
+    </div>
+</div>
+
