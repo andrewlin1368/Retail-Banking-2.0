@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Retail_Banking.Data;
 using Retail_Banking.Models;
 using System;
@@ -41,8 +43,9 @@ namespace Retail_Banking
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
+            var logger = loggerFactory.CreateLogger("Middleware");
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -78,6 +81,22 @@ namespace Retail_Banking
             });
 
             CreateRoles(serviceProvider).Wait();
+
+            app.Use(async (context, next) =>
+            {
+                var myTimer = System.Diagnostics.Stopwatch.StartNew();
+                logger.LogInformation($"Beginning request in {env.EnvironmentName} environment");
+
+                await next();
+                logger.LogInformation($"Request completed in {myTimer.ElapsedMilliseconds}ms");
+            });
+
+            app.Run((context) => {
+                //context.Response.ContentType = "text/html";
+                //await context.Response.WriteAsync("Message displayed by middleware!");
+                context.Response.Redirect("https://localhost:5001/error/error");
+                return Task.CompletedTask;
+            });
         }
 
         public async Task CreateRoles(IServiceProvider serviceProvider)
