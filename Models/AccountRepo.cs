@@ -59,7 +59,7 @@ namespace Retail_Banking.Models
 
         public List<Account> ViewAllAccounts()
         {
-            return managementContext.Account.Where(x => x.AccountID != 1 && x.AccountID != 2).ToList();
+            return managementContext.Account.Where(x => x.CustomerID!=0).ToList();
         }
 
         public Customer Withdraw(Account account)
