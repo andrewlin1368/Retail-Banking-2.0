@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Models
 {
-    public interface CustomerInterface
+    public interface ICustomerInterface
     {
-        public List<Customer> ViewAllCustomers();
-        public int CreateNewCustomer(Customer customer);
-        public (Customer,int) GetCustomerBySSNIDorCustomerID(int ID,string Type);
-        public Customer GetCustomerByCustomerID(int ID);
-        public Customer UpdateCustomer(Customer customer);
-        public void DeleteCustomer(Customer customer);
-        public Customer GetByEmail(string Email);
+        public Task<List<Customer>> ViewAllCustomers();
+        public Task<int> CreateNewCustomer(Customer customer);
+        public Task<(Customer,int)> GetCustomerBySSNIDorCustomerID(int ID,string Type);
+        public Task<Customer> GetCustomerByCustomerID(int ID);
+        public Task<Customer> UpdateCustomer(Customer customer);
+        public Task DeleteCustomer(Customer customer);
+        public Task<Customer> GetByEmail(string Email);
     }
 }

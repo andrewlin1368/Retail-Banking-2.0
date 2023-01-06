@@ -36,10 +36,12 @@ namespace Retail_Banking
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Default Connection")));
             services.AddDbContext<ManagementContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Default Connection")));
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddRoles<IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
-            services.AddTransient<CustomerInterface, CustomerRepo>();
-            services.AddTransient<ErrorInterface, ErrorRepo>();
-            services.AddTransient<AccountInterface, AccountRepo>();
-            services.AddTransient<TransactionsInterface, TransactionsRepo>();
+            services.AddTransient<ICustomerInterface, CustomerRepo>();
+            services.AddTransient<IErrorInterface, ErrorRepo>();
+            services.AddTransient<IAccountInterface, AccountRepo>();
+            services.AddTransient<ITransactionsInterface, TransactionsRepo>();
+
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -71,6 +73,8 @@ namespace Retail_Banking
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseCors(options => options.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
@@ -94,7 +98,7 @@ namespace Retail_Banking
             app.Run((context) => {
                 //context.Response.ContentType = "text/html";
                 //await context.Response.WriteAsync("Message displayed by middleware!");
-                context.Response.Redirect("https://localhost:5001/error/error");
+                context.Response.Redirect("http://my.retailbanking.com/error/error");
                 return Task.CompletedTask;
             });
         }

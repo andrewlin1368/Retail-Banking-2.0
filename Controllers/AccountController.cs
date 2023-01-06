@@ -5,16 +5,17 @@ using Retail_Banking.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Controllers
 {
     public class AccountController : Controller
     {
-        CustomerInterface customerInterface;
-        AccountInterface accountInterface;
-        ErrorInterface errorInterface;
+        ICustomerInterface customerInterface;
+        IAccountInterface accountInterface;
+        IErrorInterface errorInterface;
         private static int value = 0;
-        public AccountController(CustomerInterface customerInterface, AccountInterface accountInterface, ErrorInterface errorInterface)
+        public AccountController(ICustomerInterface customerInterface, IAccountInterface accountInterface, IErrorInterface errorInterface)
         {
             this.customerInterface = customerInterface; 
             this.accountInterface = accountInterface;
@@ -26,15 +27,14 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager")]
-        public IActionResult ViewAllAccounts()
+        public async Task<ActionResult> ViewAllAccounts()
         {
             try
             {
-                List<Account> accounts = new List<Account>();
-                accounts = accountInterface.ViewAllAccounts();
+                List<Account> accounts = await accountInterface.ViewAllAccounts();
                 if (accounts.Count == 0)
                 {
-                    TempData["Response"] = errorInterface.GetErrorMessage(103);
+                    TempData["Response"] = await errorInterface.GetErrorMessage(103);
                     return View();
                 }
                 return View(accounts);
@@ -46,15 +46,17 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager,Worker,User")]
-        public IActionResult ViewAccounts(Customer customer)
+        public async Task<ActionResult> ViewAccounts(Customer customer)
         {
             try
             {
-                CustomerAccount customerAccount = new CustomerAccount();
-                customerAccount.customer = customer;
-                customerAccount.accounts = accountInterface.GetAllCustomerAccounts(customerAccount.customer.CustomerID);
-                if (customerAccount.accounts.Count < 1) TempData["Response"] = errorInterface.GetErrorMessage(103);
-                if (value == 2) TempData["_response"] = "Account deleted successfully.";
+                CustomerAccount customerAccount = new()
+                {
+                    customer = customer,
+                    accounts = await accountInterface.GetAllCustomerAccounts(customer.CustomerID)
+                };
+                if (customerAccount.accounts.Count < 1) TempData["Response"] = await errorInterface.GetErrorMessage(103);
+                if (value == 2) TempData["_response"] = "Account deleted successfully."; 
                 value = 0;
                 return View(customerAccount);
             }
@@ -69,8 +71,10 @@ namespace Retail_Banking.Controllers
         {
             try
             {
-                CustomerAccountDetail customerAccountDetail = new CustomerAccountDetail();
-                customerAccountDetail.customer = customer;
+                CustomerAccountDetail customerAccountDetail = new()
+                {
+                    customer = customer
+                };
                 return View(customerAccountDetail);
             }
             catch
@@ -81,37 +85,38 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles = "User")]
         [HttpPost]
-        public IActionResult AddAccounts(CustomerAccountDetail customerAccountDetail)
+        public async Task<ActionResult> AddAccounts(CustomerAccountDetail customerAccountDetail)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    CustomerAccount checkaccounts = new CustomerAccount();
-                    checkaccounts.accounts = accountInterface.GetAllCustomerAccounts(customerAccountDetail.account.CustomerID);
+                    CustomerAccount checkaccounts = new()
+                    {
+                        accounts = await accountInterface.GetAllCustomerAccounts(customerAccountDetail.account.CustomerID)
+                    };
                     if (checkaccounts.accounts.Count == 2)
                     {
-                        TempData["Response"] = errorInterface.GetErrorMessage(100);
-                        return RedirectToAction("AddAccount", "Account", customerAccountDetail.customer);
+                        TempData["Response"] = await errorInterface.GetErrorMessage(100);
+                        return RedirectToAction("AddAccount", customerAccountDetail.customer);
                     }
                     else if (checkaccounts.accounts.Count == 1 && customerAccountDetail.account.AccountType == "Checking" && checkaccounts.accounts[0].AccountType == "Checking")
                     {
-                        TempData["Response"] = errorInterface.GetErrorMessage(101);
-                        return RedirectToAction("AddAccount", "Account", customerAccountDetail.customer);
+                        TempData["Response"] = await errorInterface.GetErrorMessage(101);
+                        return RedirectToAction("AddAccount", customerAccountDetail.customer);
                     }
                     else if (checkaccounts.accounts.Count == 1 && customerAccountDetail.account.AccountType == "Saving" && checkaccounts.accounts[0].AccountType == "Saving")
                     {
-                        TempData["Response"] = errorInterface.GetErrorMessage(102);
-                        return RedirectToAction("AddAccount", "Account", customerAccountDetail.customer);
+                        TempData["Response"] = await errorInterface.GetErrorMessage(102);
+                        return RedirectToAction("AddAccount", customerAccountDetail.customer);
                     }
                     else
                     {
-                        customerAccountDetail.account.Status = $"{customerAccountDetail.account.AccountType} created on {DateTime.Now}";
-                        accountInterface.AddAccounts(customerAccountDetail.account);
-                        return RedirectToAction("ViewAccounts", "Account", customerAccountDetail.customer);
+                        await accountInterface.AddAccounts(customerAccountDetail.account);
+                        return RedirectToAction("ViewAccounts", customerAccountDetail.customer);
                     }
                 }
-                else return RedirectToAction("AddAccount", "Account", customerAccountDetail.customer);
+                else return RedirectToAction("AddAccount", customerAccountDetail.customer);
             }
             catch
             {
@@ -124,8 +129,10 @@ namespace Retail_Banking.Controllers
         {
             try
             {
-                Deposit deposit = new Deposit();
-                deposit.Account = account;
+                Deposit deposit = new()
+                {
+                    Account = account
+                };
                 return View(deposit);
             }
             catch
@@ -136,21 +143,15 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles = "Manager,Worker")]
         [HttpPost]
-        public IActionResult DepositAccount(Deposit deposit)
+        public async Task<ActionResult> DepositAccount(Deposit deposit)
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    Account account = deposit.Account;
-                    account.AccountBalance += deposit.Amount;
-                    account.Status = $"Deposited {deposit.Amount} on {DateTime.Now}.";
-                    return RedirectToAction("ViewAccounts", "Account", accountInterface.Deposit(account));
-                }
+                if (ModelState.IsValid) return RedirectToAction("ViewAccounts", await accountInterface.Deposit(deposit.Account,deposit.Amount));
                 else
                 {
-                    if (deposit.Amount < 1) TempData["Response"] = errorInterface.GetErrorMessage(602);
-                    return RedirectToAction("Deposit", "Account", deposit.Account);
+                    if (deposit.Amount < 1) TempData["Response"] = await errorInterface.GetErrorMessage(602);
+                    return RedirectToAction("Deposit", deposit.Account);
                 }
             }
             catch
@@ -159,13 +160,15 @@ namespace Retail_Banking.Controllers
             }
         }
 
-        [Authorize(Roles = "Manager,Worker,User")]
+        [Authorize(Roles = "User")]
         public IActionResult Withdraw(Account account)
         {
             try
             {
-                Withdraw withdraw = new Withdraw();
-                withdraw.Account = account;
+                Withdraw withdraw = new()
+                {
+                    Account = account
+                };
                 return View(withdraw);
             }
             catch
@@ -174,30 +177,23 @@ namespace Retail_Banking.Controllers
             }
         }
 
-        [Authorize(Roles = "Manager,Worker,User")]
+        [Authorize(Roles = "User")]
         [HttpPost]
-        public IActionResult WithdrawAccount(Withdraw withdraw)
+        public async Task<ActionResult> WithdrawAccount(Withdraw withdraw)
         {
             try
             {
                 if (withdraw.Amount > withdraw.Account.AccountBalance)
                 {
-                    TempData["Response"] = errorInterface.GetErrorMessage(600);
-                    return RedirectToAction("Withdraw", "Account", withdraw.Account);
+                    TempData["Response"] = await errorInterface.GetErrorMessage(600);
+                    return RedirectToAction("Withdraw", withdraw.Account);
                 }
-                if (ModelState.IsValid)
+                if (withdraw.Amount < 1)
                 {
-                    Account account = new Account();
-                    account = withdraw.Account;
-                    account.AccountBalance -= withdraw.Amount;
-                    account.Status = $"Withdrew {withdraw.Amount} on {DateTime.Now}.";
-                    return RedirectToAction("ViewAccounts", "Account", accountInterface.Withdraw(account));
+                    TempData["Response"] = await errorInterface.GetErrorMessage(602);
+                    return RedirectToAction("Withdraw", withdraw.Account);
                 }
-                else
-                {
-                    if (withdraw.Amount < 1) TempData["Response"] = errorInterface.GetErrorMessage(602);
-                    return RedirectToAction("Withdraw", "Account", withdraw.Account);
-                }
+                return ModelState.IsValid ? RedirectToAction("ViewAccounts", await accountInterface.Withdraw(withdraw.Account,withdraw.Amount)) : RedirectToAction("Withdraw", withdraw.Account);
             }
             catch
             {
@@ -206,11 +202,11 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager")]
-        public IActionResult Delete(Account account)
+        public async Task<ActionResult> Delete(Account account)
         {
             try
             {
-                if (value == 1) TempData["Response"] = errorInterface.GetErrorMessage(603);
+                if (value == 1) TempData["Response"] = await errorInterface.GetErrorMessage(603);
                 value = 0;
                 return View(account);
             }
@@ -222,21 +218,20 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles = "Manager")]
         [HttpPost]
-        public IActionResult DeleteAccount(Account account)
+        public async Task<ActionResult> DeleteAccount(Account account)
         {
             try
             {
                 if (account.AccountBalance != 0)
                 {
                     value = 1;
-                    return RedirectToAction("Delete", "Account", account);
+                    return RedirectToAction("Delete", account);
                 }
                 else
                 {
-                    Customer customer = customerInterface.GetCustomerByCustomerID(account.CustomerID);
-                    accountInterface.Delete(account);
+                    await accountInterface.Delete(account);
                     value = 2;
-                    return RedirectToAction("ViewAccounts", "Account", customer);
+                    return RedirectToAction("ViewAccounts", await customerInterface.GetCustomerByCustomerID(account.CustomerID));
                 }
             }
             catch
@@ -246,11 +241,11 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager,Worker")]
-        public IActionResult SearchByAccountID()
+        public async Task<ActionResult> SearchByAccountID()
         {
             try
             {
-                if (value == 100) TempData["Response"] = errorInterface.GetErrorMessage(1000);
+                if (value == 100) TempData["Response"] = await errorInterface.GetErrorMessage(1000);
                 value = 0;
                 return View();
             }
@@ -261,17 +256,17 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager,Worker,User")]
-        public IActionResult FetchCustomerAndAccountInfo(int AccountID)
+        public async Task<ActionResult> FetchCustomerAndAccountInfo(int AccountID)
         {
-            if(AccountID == 1 || AccountID == 2)
-            {
-                value = 100;
-                return RedirectToAction("SearchByAccountID");
-            }
             try
             {
-                var details = accountInterface.GetCustomerAndAccountDetails(AccountID);
-                if(details == null) TempData["Response"] = errorInterface.GetErrorMessage(103);
+                if (AccountID == 1 || AccountID == 2)
+                {
+                    value = 100;
+                    return RedirectToAction("SearchByAccountID");
+                }
+                CustomerAccountDetail details = await accountInterface.GetCustomerAndAccountDetails(AccountID);
+                if(details == default) TempData["Response"] = await errorInterface.GetErrorMessage(103);
                 return View(details);
             }
             catch

@@ -1,11 +1,12 @@
 ﻿using Retail_Banking.ViewModels;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Models
 {
-    public interface TransactionsInterface
+    public interface ITransactionsInterface
     {
-        public void Transfer(Transactions transactions);
-        public CustomerAccountTransactions Transactions(int AccountID);
-        public (Account, Account) FromAccountAndToAccountData(int FromAccountID, int ToAccountID);
+        public Task Transfer(Transactions transactions);
+        public Task<CustomerAccountTransactions> Transactions(int AccountID);
+        public Task<(Account, Account)> FromAccountAndToAccountData(int FromAccountID, int ToAccountID);
     }
 }

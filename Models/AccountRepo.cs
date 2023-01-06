@@ -1,10 +1,13 @@
-﻿using Retail_Banking.ViewModels;
+﻿using Microsoft.EntityFrameworkCore;
+using Retail_Banking.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Models
 {
-    public class AccountRepo:AccountInterface
+    public class AccountRepo:IAccountInterface
     {
         ManagementContext managementContext;
         public AccountRepo(ManagementContext managementContext)
@@ -12,61 +15,58 @@ namespace Retail_Banking.Models
             this.managementContext = managementContext;
         }
 
-        public void AddAccounts(Account account)
+        public async Task AddAccounts(Account account)
         {
+            account.Status = $"{account.AccountType} created on {DateTime.Now}";
             managementContext.Account.Add(account);
-            managementContext.SaveChanges();
+            await managementContext.SaveChangesAsync();
         }
 
-        public void Delete(Account account)
+        public async Task Delete(Account account)
         {
             managementContext.Account.Remove(account);
-            managementContext.SaveChanges();
+            await managementContext.SaveChangesAsync();
         }
 
-        public Customer Deposit(Account account)
+        public async Task<Customer> Deposit(Account account, decimal amount)
         {
-            managementContext.Entry(account).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-            managementContext.SaveChanges();
-            return managementContext.Customer.Where(x => x.CustomerID == account.CustomerID).FirstOrDefault();
+            account.AccountBalance += amount;
+            account.Status = $"Deposited {amount} on {DateTime.Now}.";
+            managementContext.Entry(account).State = EntityState.Modified;
+            await managementContext.SaveChangesAsync();
+            return await managementContext.Customer.Where(x => x.CustomerID == account.CustomerID).FirstAsync();
         }
 
-        public List<Account> GetAllCustomerAccounts(int CustomerID)
+        public async Task<List<Account>> GetAllCustomerAccounts(int CustomerID)
         {
-            return managementContext.Account.Where(x => x.CustomerID == CustomerID).ToList();
+            return await managementContext.Account.Where(x => x.CustomerID == CustomerID).ToListAsync();
         }
 
-        public CustomerAccountDetail GetCustomerAndAccountDetails(int AccountID)
+        public async Task<CustomerAccountDetail> GetCustomerAndAccountDetails(int AccountID)
         {
-            try
-            {
-                var details = (from account in managementContext.Account
-                               join customer in managementContext.Customer
-                               on account.CustomerID equals customer.CustomerID
-                               where account.AccountID == AccountID
-                               select new CustomerAccountDetail()
-                               {
-                                   customer = customer,
-                                   account = account
-                               }).FirstOrDefault();
-                return details;
-            }
-            catch
-            {
-                return null;
-            }
+            return await (from account in managementContext.Account 
+                          join customer in managementContext.Customer 
+                          on account.CustomerID equals customer.CustomerID 
+                          where account.AccountID == AccountID 
+                          select new CustomerAccountDetail()
+                          {
+                              customer = customer,
+                              account = account
+                          }).FirstOrDefaultAsync();
         }
 
-        public List<Account> ViewAllAccounts()
+        public async Task<List<Account>> ViewAllAccounts()
         {
-            return managementContext.Account.Where(x => x.CustomerID!=0).ToList();
+            return await managementContext.Account.Where(x => x.CustomerID!=0).ToListAsync();
         }
 
-        public Customer Withdraw(Account account)
+        public async Task<Customer> Withdraw(Account account,decimal amount)
         {
-            managementContext.Entry(account).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-            managementContext.SaveChanges();
-            return managementContext.Customer.Where(x => x.CustomerID == account.CustomerID).FirstOrDefault();
+            account.AccountBalance -= amount;
+            account.Status = $"Withdrew {amount} on {DateTime.Now}.";
+            managementContext.Entry(account).State = EntityState.Modified;
+            await managementContext.SaveChangesAsync();
+            return await managementContext.Customer.Where(x => x.CustomerID == account.CustomerID).FirstAsync();
         }
     }
 }

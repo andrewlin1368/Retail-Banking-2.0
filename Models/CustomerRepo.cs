@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Models
 {
-    public class CustomerRepo:CustomerInterface
+    public class CustomerRepo:ICustomerInterface
     {
         ManagementContext ManagementContext;
         public CustomerRepo(ManagementContext managementContext)
@@ -13,49 +15,53 @@ namespace Retail_Banking.Models
             ManagementContext = managementContext;
         }
 
-        public int CreateNewCustomer(Customer customer)
+        public async Task<int> CreateNewCustomer(Customer customer)
         {
-            Customer customer1 = ManagementContext.Customer.Where(c => c.SSNID == customer.SSNID).FirstOrDefault();
-            if (customer1 != null) return 1;
-            ManagementContext.Customer.Add(customer);
-            ManagementContext.SaveChanges();
-            return 200;
+            if(await ManagementContext.Customer.Where(c => c.SSNID == customer.SSNID).FirstOrDefaultAsync() == default)
+            {
+                customer.Status = $"{customer.SSNID} created on {DateTime.Now}.";
+                await ManagementContext.Customer.AddAsync(customer);
+                await ManagementContext.SaveChangesAsync();
+                return 200;
+            }
+            return 1;
         }
 
-        public void DeleteCustomer(Customer customer)
+        public async Task DeleteCustomer(Customer customer)
         {
             ManagementContext.Customer.Remove(customer);
-            ManagementContext.SaveChanges();
+            await ManagementContext.SaveChangesAsync();
         }
 
-        public Customer GetByEmail(string Email)
+        public async Task<Customer> GetByEmail(string Email)
         {
-            return ManagementContext.Customer.Where(x => x.Email == Email).FirstOrDefault();
+            return await ManagementContext.Customer.Where(x => x.Email == Email).FirstOrDefaultAsync();
         }
 
-        public Customer GetCustomerByCustomerID(int ID)
+        public async Task<Customer> GetCustomerByCustomerID(int ID)
         {
-            return ManagementContext.Customer.Where(x => x.CustomerID == ID).FirstOrDefault();
+            return await ManagementContext.Customer.Where(x => x.CustomerID == ID).FirstOrDefaultAsync();
         }
 
-        public (Customer,int) GetCustomerBySSNIDorCustomerID(int ID, string Type)
+        public async Task<(Customer,int)> GetCustomerBySSNIDorCustomerID(int ID, string Type)
         {
             Customer customer; 
-            if (Type == "SSNID") customer = ManagementContext.Customer.Where(x => x.SSNID == ID).FirstOrDefault();  
-            else customer = ManagementContext.Customer.Where(x => x.CustomerID == ID).FirstOrDefault();
-            return customer == null && Type == "SSNID" ? (null, 703) : customer == null && Type == "CustomerID" ? (null,701) : (customer, 200);
+            if (Type == "SSNID") customer = await ManagementContext.Customer.Where(x => x.SSNID == ID).FirstOrDefaultAsync();  
+            else customer = await ManagementContext.Customer.Where(x => x.CustomerID == ID).FirstOrDefaultAsync();
+            return customer == default && Type == "SSNID" ? (customer, 703) : customer == default && Type == "CustomerID" ? (customer, 701) : (customer, 200);
         }
 
-        public Customer UpdateCustomer(Customer customer)
+        public async Task<Customer> UpdateCustomer(Customer customer)
         {
-            ManagementContext.Entry(customer).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-            ManagementContext.SaveChanges();
-            return ManagementContext.Customer.Where(x => x.CustomerID == customer.CustomerID).FirstOrDefault();
+            customer.Status = $"Data updated on {DateTime.Now}.";
+            ManagementContext.Entry(customer).State = EntityState.Modified;
+            await ManagementContext.SaveChangesAsync();
+            return await ManagementContext.Customer.Where(x => x.CustomerID == customer.CustomerID).FirstAsync();
         }
 
-        public List<Customer> ViewAllCustomers()
+        public async Task<List<Customer>> ViewAllCustomers()
         {
-            return ManagementContext.Customer.Where(x=> x.CustomerID != 0).ToList();
+            return await ManagementContext.Customer.Where(x=> x.CustomerID != 0).ToListAsync();
         }
     }
 }

@@ -11,11 +11,11 @@ namespace Retail_Banking.Controllers
 {
     public class CustomerController : Controller
     {
-        CustomerInterface customerInterface;
-        ErrorInterface errorInterface;
-        AccountInterface accountInterface;
+        ICustomerInterface customerInterface;
+        IErrorInterface errorInterface;
+        IAccountInterface accountInterface;
         private readonly UserManager<IdentityUser> userManager;
-        public CustomerController(CustomerInterface customerInterface, ErrorInterface errorInterface, AccountInterface accountInterface, UserManager<IdentityUser> userManager)
+        public CustomerController(ICustomerInterface customerInterface, IErrorInterface errorInterface, IAccountInterface accountInterface, UserManager<IdentityUser> userManager)
         {
             this.customerInterface = customerInterface;
             this.errorInterface = errorInterface;
@@ -24,15 +24,14 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager")]
-        public IActionResult ViewAllCustomers()
+        public async Task<ActionResult> ViewAllCustomers()
         {
             try
             {
-                List<Customer> customers = new List<Customer>();
-                customers = customerInterface.ViewAllCustomers();
+                List<Customer> customers = await customerInterface.ViewAllCustomers();
                 if (customers.Count == 0)
                 {
-                    TempData["Response"] = errorInterface.GetErrorMessage(105);
+                    TempData["Response"] = await errorInterface.GetErrorMessage(105);
                     return View();
                 }
                 return View(customers);
@@ -48,10 +47,10 @@ namespace Retail_Banking.Controllers
         {
             try
             {
-                Customer customer = new Customer();
+                Customer customer = new();
                 var user = await userManager.GetUserAsync(HttpContext.User);
                 customer.Email = user.Email;
-                if (customerInterface.GetByEmail(user.Email) != null) TempData["Response"] = errorInterface.GetErrorMessage(1);
+                if (await customerInterface.GetByEmail(user.Email) != default) TempData["Response"] = await errorInterface.GetErrorMessage(1);
                 return View(customer);
             }
             catch
@@ -62,25 +61,25 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles ="User")]
         [HttpPost]
-        public IActionResult CreateNewCustomer(Customer customer)
+        public async Task<ActionResult> CreateNewCustomer(Customer customer)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    customer.Status = $"{customer.SSNID} created on {DateTime.Now}.";
-                    int ErrorID = customerInterface.CreateNewCustomer(customer);
-                    if (ErrorID == 1)
+                    if (await customerInterface.CreateNewCustomer(customer) == 1)
                     {
-                        TempData["Response"] = errorInterface.GetErrorMessage(ErrorID);
+                        TempData["Response"] = await errorInterface.GetErrorMessage(1);
                         return View(customer);
                     }
                     else
                     {
-                        CustomerIDs customerIDs = new CustomerIDs();
-                        customerIDs.SSNID = customer.SSNID;
-                        customerIDs.CustomerID = 0;
-                        return RedirectToAction("GetCustomer", "Customer", customerIDs);
+                        CustomerIDs customerIDs = new()
+                        {
+                            SSNID = customer.SSNID,
+                            CustomerID = 0
+                        };
+                        return RedirectToAction("GetCustomer", customerIDs);
                     }
                 }
                 else return View(customer);
@@ -94,29 +93,36 @@ namespace Retail_Banking.Controllers
         [Authorize(Roles ="Manager,Worker")]
         public IActionResult GetCustomerBySSNIDorCustomerID()
         {
-            return View();
+            try
+            {
+                return View();
+            }
+            catch
+            {
+                return RedirectToAction("Error", "Error");
+            }
         }
 
         [Authorize(Roles ="Manager,Worker,User")]
-        public IActionResult GetCustomer(CustomerIDs ids)
+        public async Task<ActionResult> GetCustomer(CustomerIDs ids)
         {
-            if (ids.CustomerID == 0 && ids.SSNID == 0)
-            {
-                TempData["Response"] = errorInterface.GetErrorMessage(704);
-                return RedirectToAction("GetCustomerBySSNIDorCustomerID", ids);
-            }
             try
             {
+                if (ids.CustomerID == 0 && ids.SSNID == 0)
+                {
+                    TempData["Response"] = await errorInterface.GetErrorMessage(704);
+                    return RedirectToAction("GetCustomerBySSNIDorCustomerID", ids);
+                }
                 if (ModelState.IsValid)
                 {
                     (Customer findcustomer, int ErrorID) data;
                     
-                    if (ids.CustomerID == 0) data = customerInterface.GetCustomerBySSNIDorCustomerID(ids.SSNID, "SSNID");
-                    else data = customerInterface.GetCustomerBySSNIDorCustomerID(ids.CustomerID, "CustomerID");
+                    if (ids.CustomerID == 0) data = await customerInterface.GetCustomerBySSNIDorCustomerID(ids.SSNID, "SSNID");
+                    else data = await customerInterface.GetCustomerBySSNIDorCustomerID(ids.CustomerID, "CustomerID");
 
-                    if (data.findcustomer == null)
+                    if (data.findcustomer == default)
                     {
-                        TempData["Response"] = errorInterface.GetErrorMessage(data.ErrorID);
+                        TempData["Response"] = await errorInterface.GetErrorMessage(data.ErrorID);
                         return RedirectToAction("GetCustomerBySSNIDorCustomerID", ids);
                     }
                     else return RedirectToAction("ViewCustomer", data.findcustomer);
@@ -136,8 +142,8 @@ namespace Retail_Banking.Controllers
             {
                 var user = await userManager.GetUserAsync(HttpContext.User);
                 var email = user.Email;
-                Customer customer = customerInterface.GetByEmail(email);
-                if (customer == null) TempData["Response"] = errorInterface.GetErrorMessage(2);
+                Customer customer = await customerInterface.GetByEmail(email);
+                if (customer == default) TempData["Response"] = await errorInterface.GetErrorMessage(2);
                 return RedirectToAction("ViewCustomer", customer);
             }
             catch
@@ -174,17 +180,11 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles = "Manager,Worker,User")]
         [HttpPost]
-        public IActionResult UpdateCustomer(Customer customer)
+        public async Task<ActionResult> UpdateCustomer(Customer customer)
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    customer.Status = $"Data updated on {DateTime.Now}.";
-                    Customer updatedcustomer = customerInterface.UpdateCustomer(customer);
-                    return RedirectToAction("ViewCustomer", updatedcustomer);
-                }
-                else return RedirectToAction("Update", customer);
+                return ModelState.IsValid ? RedirectToAction("ViewCustomer", await customerInterface.UpdateCustomer(customer)) : RedirectToAction("Update", customer);
             }
             catch
             {
@@ -193,12 +193,12 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles = "Manager")]
-        public IActionResult Delete(Customer customer)
+        public async Task<ActionResult> Delete(Customer customer)
         {
             try
             {
-                List<Account> accounts = accountInterface.GetAllCustomerAccounts(customer.CustomerID);
-                if (accounts.Count > 0) TempData["Response"] = errorInterface.GetErrorMessage(104);
+                List<Account> accounts = await accountInterface.GetAllCustomerAccounts(customer.CustomerID);
+                if (accounts.Count > 0) TempData["Response"] = await errorInterface.GetErrorMessage(104);
                 return View(customer);
             }
             catch
@@ -222,11 +222,11 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles = "Manager")]
         [HttpPost]
-        public IActionResult DeleteCustomer(Customer customer)
+        public async Task<ActionResult> DeleteCustomer(Customer customer)
         {
             try
             {
-                customerInterface.DeleteCustomer(customer);
+                await customerInterface.DeleteCustomer(customer);
                 TempData["Response"] = "Customer Deleted Successfully.";
                 return View();
             }

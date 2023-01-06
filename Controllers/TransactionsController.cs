@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Retail_Banking.Models;
 using Retail_Banking.ViewModels;
 using System;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Controllers
 {
     public class TransactionsController : Controller
     {
-        AccountInterface accountInterface;
-        CustomerInterface customerInterface;
-        ErrorInterface errorInterface;
-        TransactionsInterface transactionsInterface;
+        IAccountInterface accountInterface;
+        IErrorInterface errorInterface;
+        ITransactionsInterface transactionsInterface;
         private static int value = 0;
-        public TransactionsController(AccountInterface accountInterface, CustomerInterface customerInterface, ErrorInterface errorInterface,TransactionsInterface transactionsInterface)
+        public TransactionsController(IAccountInterface accountInterface, IErrorInterface errorInterface,ITransactionsInterface transactionsInterface)
         {
             this.accountInterface = accountInterface;
-            this.customerInterface = customerInterface;
             this.errorInterface = errorInterface;
             this.transactionsInterface = transactionsInterface;
         }
@@ -28,17 +27,20 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles ="User")]
-        public IActionResult Transfer(Account account)
+        public async Task<ActionResult> Transfer(Account account)
         {
             try
             {
-                Transactions transactions = new Transactions();
-                transactions.FromAccountID = account.AccountID;
-                if (value == 1) TempData["Response"] = errorInterface.GetErrorMessage(600);
-                if (value == 2) TempData["Response"] = errorInterface.GetErrorMessage(702);
-                if (value == 3) TempData["Response"] = errorInterface.GetErrorMessage(705);
-                if (value == 4) TempData["Response"] = errorInterface.GetErrorMessage(900);
-                if (value == 5) TempData["Response"] = errorInterface.GetErrorMessage(1000);
+                Transactions transactions = new()
+                {
+                    FromAccountID = account.AccountID
+                };
+
+                if (value == 1) TempData["Response"] = await errorInterface.GetErrorMessage(600);
+                if (value == 2) TempData["Response"] = await errorInterface.GetErrorMessage(702);
+                if (value == 3) TempData["Response"] = await errorInterface.GetErrorMessage(705);
+                if (value == 4) TempData["Response"] = await errorInterface.GetErrorMessage(900);
+                if (value == 5) TempData["Response"] = await errorInterface.GetErrorMessage(1000);
                 value = 0;
                 return View(transactions);
             }
@@ -50,42 +52,42 @@ namespace Retail_Banking.Controllers
 
         [Authorize(Roles ="User")]
         [HttpPost]
-        public IActionResult TransferMoney(Transactions transactions)
+        public async Task<ActionResult> TransferMoney(Transactions transactions)
         {
             try
             {
-                Account account = accountInterface.GetCustomerAndAccountDetails(transactions.FromAccountID).account;
+                CustomerAccountDetail customerAccountDetail = await accountInterface.GetCustomerAndAccountDetails(transactions.FromAccountID);
                 if (ModelState.IsValid)
                 {
                     if (transactions.ToAccountID == 1 || transactions.ToAccountID == 2)
                     {
                         value = 5;
-                        return RedirectToAction("Transfer", account);
+                        return RedirectToAction("Transfer", customerAccountDetail.account);
                     }
                     if (transactions.ToAccountID == transactions.FromAccountID)
                     {
                         value = 3;
-                        return RedirectToAction("Transfer", "Transactions", account);
+                        return RedirectToAction("Transfer", customerAccountDetail.account);
                     }
-                    if (account.AccountBalance < transactions.Amount)
+                    if (customerAccountDetail.account.AccountBalance < transactions.Amount)
                     {
                         value = 1;
-                        return RedirectToAction("Transfer", "Transactions", account);
+                        return RedirectToAction("Transfer", customerAccountDetail.account);
                     }
-                    CustomerAccountDetail customerAccountDetail = accountInterface.GetCustomerAndAccountDetails(transactions.ToAccountID);
-                    if (customerAccountDetail == null || customerAccountDetail.account == null)
+                    CustomerAccountDetail toCustomerAccountDetail = await accountInterface.GetCustomerAndAccountDetails(transactions.ToAccountID);
+                    if (toCustomerAccountDetail == default || toCustomerAccountDetail.account == default)
                     {
                         value = 2;
-                        return RedirectToAction("Transfer", "Transactions", account);
+                        return RedirectToAction("Transfer", customerAccountDetail.account);
                     }
-                    transactions.Date = DateTime.Now;
-                    transactionsInterface.Transfer(transactions);
+                    
+                    await transactionsInterface.Transfer(transactions);
                     return RedirectToAction("FetchCustomerAndAccountInfo", "Account", new { AccountID = transactions.FromAccountID });
                 }
                 else
                 {
                     value = 4;
-                    return RedirectToAction("Transfer", "Transactions", account);
+                    return RedirectToAction("Transfer", customerAccountDetail.account);
                 }
             }
             catch
@@ -95,17 +97,18 @@ namespace Retail_Banking.Controllers
         }
 
         [Authorize(Roles ="Manager,Worker,User")]
-        public IActionResult ViewAllTransactions(Account account)
+        public async Task<ActionResult> ViewAllTransactions(Account account)
         {
             try
             {
-                CustomerAccountTransactions customerAccountTransactions = transactionsInterface.Transactions(account.AccountID);
-                if (customerAccountTransactions.Transactions.Count == 0) TempData["Response"] = errorInterface.GetErrorMessage(800);
+                CustomerAccountTransactions customerAccountTransactions = await transactionsInterface.Transactions(account.AccountID);
+                if (customerAccountTransactions.Transactions.Count == 0) TempData["Response"] = await errorInterface.GetErrorMessage(800);
                 return View(customerAccountTransactions);
             }
             catch
             {
-                return RedirectToAction("Error", "Error");            }
+                return RedirectToAction("Error", "Error");            
+            }
         }
     }
 }

@@ -16,10 +16,10 @@
 }
 else
 {
-    @if (TempData["Response"] != null)
+    @if (TempData["_response"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>@TempData["Response"]</strong> 
+            <strong>@TempData["_response"]</strong> 
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>

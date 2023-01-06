@@ -1,17 +1,20 @@
-﻿using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Retail_Banking.Models
 {
-    public class ErrorRepo : ErrorInterface
+    public class ErrorRepo : IErrorInterface
     {
         public ManagementContext ManagementContext;
         public ErrorRepo(ManagementContext managementContext)
         {
             ManagementContext = managementContext;
         }
-        public string GetErrorMessage(int ErrorID)
+        public async Task<string> GetErrorMessage(int ErrorID)
         {
-            return ManagementContext.Error.Where(c => c.ErrorID == ErrorID).FirstOrDefault().ErrorMessage;
+            Error error = await ManagementContext.Error.Where(c => c.ErrorID == ErrorID).FirstAsync();
+            return error.ErrorMessage;
         }
     }
 }

@@ -1,7 +1,9 @@
-﻿namespace Retail_Banking.Models
+﻿using System.Threading.Tasks;
+
+namespace Retail_Banking.Models
 {
-    public interface ErrorInterface
+    public interface IErrorInterface
     {
-        public string GetErrorMessage(int ErrorID);
+        public Task<string> GetErrorMessage(int ErrorID);
     }
 }
