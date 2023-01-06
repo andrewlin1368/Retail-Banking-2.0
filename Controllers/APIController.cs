@@ -81,5 +81,32 @@ namespace Retail_Banking.Controllers
                 return BadRequest(RedirectToAction("Error", "Error"));
             }
         }
+
+        [HttpDelete("DeleteWithoutAuthorization/{CustomerID}")]
+        public async Task<IActionResult> DeleteCustomer(int CustomerID)
+        {
+            try
+            {
+                await customerInterface.DeleteCustomer(await customerInterface.GetCustomerByCustomerID(CustomerID));
+                return Ok(200);
+            }
+            catch
+            {
+                return BadRequest(RedirectToAction("Error", "Error"));
+            }
+        }
+
+        [HttpPut("UpdateWithoutAuthorization")]
+        public async Task<IActionResult> UpdateCustomer(Customer customer)
+        {
+            try
+            {
+                return Ok(await customerInterface.UpdateCustomer(customer));
+            }
+            catch
+            {
+                return BadRequest(RedirectToAction("Error", "Error"));
+            }
+        }
     }
 }

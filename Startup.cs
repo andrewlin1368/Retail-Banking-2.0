@@ -73,7 +73,7 @@ namespace Retail_Banking
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseCors(options => options.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+            app.UseCors(options => options.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithMethods("GET", "PUT", "DELETE", "POST", "PATCH"));
 
             app.UseEndpoints(endpoints =>
             {
